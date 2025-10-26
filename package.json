@@ -3,12 +3,14 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:setup": "node scripts/setup-db.js"
   },
   "keywords": [],
   "author": "",
   "license": "GPL",
   "dependencies": {
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3",
     "winston": "^3.18.3"
   }
 }
