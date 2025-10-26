@@ -1,11 +1,18 @@
 {
   "name": "pulseexplorer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:setup": "node scripts/setup-db.js",
+    "db:reset": "node scripts/reset-db.js"
   },
   "keywords": [],
   "author": "",
-  "license": "GPL"
+  "license": "GPL",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3",
+    "readline": "^1.3.0",
+    "winston": "^3.18.3"
+  }
 }

@@ -3,9 +3,7 @@
 
 
 ### Database Setup
-**Option B: Quick setup**
+**Quick setup**
 ```bash
 npm run db:setup
 ```
-
-
