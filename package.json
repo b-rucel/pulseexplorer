@@ -1,6 +1,6 @@
 {
   "name": "pulseexplorer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "scripts": {
     "db:setup": "node scripts/setup-db.js",
