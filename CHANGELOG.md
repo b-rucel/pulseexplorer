@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2025-10-26
+
+### Fixed
+
+#### Database Connection Handling
+- **Database class** (`lib/db.js`)
+  - Database constructor now accepts optional `databaseName` parameter for flexible connections
+  - Changed default database from hardcoded 'postgres' to `process.env.DB_NAME` (defaults to 'pulsechain_explorer')
+  - Export Database class alongside singleton instance for custom database instances
+  - Fixed incorrect config reference (config.maxConnections → config.max)
+
+- **Setup script** (`scripts/setup-db.js`)
+  - Use separate Database instances for admin and target operations
+  - Connect to 'postgres' database for database creation operations (adminDb)
+  - Connect to target database for table checking and schema execution (targetDb)
+  - Properly close connections before switching databases
+  - Fix table existence check to query correct database instead of postgres
+
+- **Reset script** (`scripts/reset-db.js`)
+  - Use adminDb instance connected to 'postgres' for drop operations
+  - Add colorized warning messages for destructive operations
+  - Remove unused imports (fs, path)
+  - Ensure proper connection cleanup on error
+
 ## [0.0.2] - 2025-10-26
 
 ### Added
@@ -73,5 +97,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[0.0.2]: https://github.com/username/pulseexplorer/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/username/pulseexplorer/releases/tag/v0.0.1
+[0.0.3]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/b-rucel/pulseexplorer/releases/tag/v0.0.1
