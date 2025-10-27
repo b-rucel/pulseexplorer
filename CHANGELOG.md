@@ -5,6 +5,75 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2025-10-27
+
+### Added
+
+#### RPC Client Infrastructure
+- **RpcClient** (`src/indexer/RpcClient.js`)
+  - Implement RpcClient class for PulseChain RPC interaction using ethers.js v6
+  - Add HTTP provider with JsonRpcProvider for standard RPC calls
+  - Add WebSocket provider with graceful fallback to HTTP on errors
+  - Implement getBlock() with configurable retry logic and exponential backoff
+  - Add getBlockRange() for sequential block fetching
+  - Add getBlocksParallel() with configurable concurrency for faster batch operations
+  - Include healthCheck() for connection validation
+  - Integrate winston logging for all RPC operations
+  - Support environment-based configuration (RPC_URL, RPC_WS_URL, RPC_TIMEOUT, RPC_RETRIES)
+  - Export singleton instance for application-wide use
+
+#### Testing Infrastructure
+- **Jest configuration** (`jest.config.js`)
+  - Set Node.js as test environment
+  - Configure coverage collection from src/ and lib/ directories
+  - Set minimum coverage thresholds at 50% for branches, functions, lines, and statements
+  - Define test file pattern matching **/test/**/*.test.js
+  - Add module resolution for node_modules and src directories
+  - Enable verbose output for detailed test reporting
+  - Enable clearMocks and restoreMocks for test isolation
+  - Set 30-second timeout for integration tests
+
+- **RpcClient unit tests** (`test/indexer/RpcClient.test.js`)
+  - Add Jest mocks for logger and ethers dependencies
+  - Test connect() with HTTP and WebSocket providers
+  - Test connect() error handling and graceful WebSocket fallback
+  - Test getBlockNumber() success and error cases
+  - Test getBlock() with retry logic and exponential backoff
+  - Test getBlock() handling of null blocks and max retry failures
+  - Test getBlockRange() for sequential block fetching
+  - Test getBlocksParallel() with concurrency limits and null filtering
+  - Test healthCheck() for RPC connection validation
+  - Test close() for proper cleanup of WebSocket connections
+  - Test sleep() utility function with fake timers
+  - Achieve comprehensive coverage of all RpcClient methods
+
+- **RpcClient integration tests** (`test/integration/RpcClient.integration.test.js`)
+  - Add real-world RPC connection tests against live PulseChain network
+  - Test getBlockNumber() returns valid and increasing block numbers
+  - Test getBlock() fetches genesis block (block 0) with correct structure
+  - Test getBlock() validates block properties (hash, parentHash, timestamp, miner, gas)
+  - Test getBlock() handles non-existent future blocks by returning null
+  - Test getBlock() with and without full transaction objects
+  - Test getBlockRange() fetches sequential blocks in correct order
+  - Test getBlocksParallel() with concurrency limits and performance validation
+  - Test getBlocksParallel() filters out null blocks for invalid block numbers
+  - Test healthCheck() verifies RPC connection health
+  - Add performance tests for single block fetch and rapid sequential requests
+  - Set 30-second timeout for real network calls
+  - Include setup/teardown for connection lifecycle management
+
+### Dependencies
+- Added `ethers` ^6.15.0 for blockchain RPC communication
+- Added `jest` ^30.2.0 for testing framework
+- Added `@types/jest` ^30.0.0 for Jest TypeScript definitions
+
+### Scripts
+- Added `test` - Run all tests
+- Added `test:watch` - Run tests in watch mode
+- Added `test:coverage` - Generate test coverage reports
+- Added `test:unit` - Run unit tests in test/indexer
+- Added `test:integration` - Run integration tests
+
 ## [0.0.3] - 2025-10-26
 
 ### Fixed
@@ -97,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.4]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/b-rucel/pulseexplorer/releases/tag/v0.0.1
