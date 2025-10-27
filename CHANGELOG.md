@@ -5,58 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.5] - 2025-10-27
-
-### Added
-
-#### Block Storage Infrastructure
-- **BlockStorage** (`src/indexer/BlockStorage.js`)
-  - Implement BlockStorage class for block data persistence to PostgreSQL
-  - Add transformBlock() to convert ethers.js block format to PostgreSQL schema
-  - Handle hex string to Buffer conversion for BYTEA columns (hash, parentHash, miner, extraData)
-  - Convert BigInt values to string for NUMERIC columns (gasLimit, gasUsed, difficulty)
-  - Add saveBlock() for single block insertion with ON CONFLICT handling
-  - Add saveBlocks() for batch insertion using database transactions for atomicity
-  - Add blockExists() to check block existence by number
-  - Add getBlock() to retrieve block by number
-  - Add getLastBlockNumber() to find highest indexed block
-  - Add getBlockCount() to get total blocks in database
-  - Add deleteBlocksFrom() for blockchain reorganization handling
-  - Add getStats() to calculate database statistics (total blocks, transactions, gas usage)
-  - Handle optional block fields (baseFeePerGas, extraData)
-  - Support Merkle root fields (transactionsRoot, stateRoot, receiptsRoot)
-  - Export singleton instance for application-wide use
-
-#### Database Enhancements
-- **Database class** (`lib/db.js`)
-  - Add getClient() method to acquire pool client for manual transaction control
-  - Add transaction() method with automatic BEGIN/COMMIT/ROLLBACK handling
-  - Add callback-based transaction execution with error handling
-  - Add insert() helper method for single row insertion with RETURNING support
-  - Add optional onConflict parameter for INSERT...ON CONFLICT handling
-  - Add healthCheck() method to verify database connectivity with SELECT 1
-  - Add getStats() method to expose connection pool statistics (totalCount, idleCount, waitingCount)
-  - Integrate transaction logging for BEGIN, COMMIT, and ROLLBACK operations
-  - Ensure proper client release in transaction finally block
-
-#### Development Testing Scripts
-- **RPC test script** (`test/test-rpc.js`)
-  - Add executable test script for manual RPC client validation
-  - Test RPC connection, getBlockNumber(), getBlock(), getBlockRange(), getBlocksParallel()
-  - Test healthCheck() for RPC connection validation
-  - Display detailed block information (number, hash, timestamp, transactions, miner, gas)
-  - Include proper error handling and cleanup with process exit codes
-
-- **BlockStorage test script** (`test/test-block-storage.js`)
-  - Add executable test script for manual BlockStorage validation
-  - Test database connection health check before operations
-  - Test single block and batch block saving workflows
-  - Test transformBlock() conversion to database format
-  - Test duplicate block handling with ON CONFLICT DO NOTHING
-  - Test parallel block fetching and batch saving workflow
-  - Test getStats() for database statistics
-  - Include comprehensive logging for test output
-
 ## [0.0.4] - 2025-10-27
 
 ### Added
@@ -218,7 +166,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[0.0.5]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.1...v0.0.2
