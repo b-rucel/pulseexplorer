@@ -1,22 +1,20 @@
 require('dotenv').config();
 const readline = require('readline');
-const fs = require('fs');
-const path = require('path');
 const { colors, rainbow, colorize } = require('../lib/colors');
-const db = require('../lib/db');
+const { Database } = require('../lib/db');
 
 
 async function resetDatabase() {
-  console.log('⚠️ ⛔️⛔️  WARNING: This will DROP the entire database and all data! ⛔️⛔️⚠️\n');
+  console.log(`⚠️ ⛔️⛔️  ${colors.bold}${colors.crimson}WARNING: This will DROP the entire database and all data!${colors.reset}  ⛔️⛔️⚠️\n`);
 
-  // Confirm with user
+  // confirm with user
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
   const confirmed = await new Promise((resolve) => {
-    rl.question('Are you sure you want to continue? (yes/no): ', (answer) => {
+    rl.question(colors.amber + 'Are you sure you want to continue? (yes/no): ' + colors.reset, (answer) => {
       rl.close();
       resolve(answer.toLowerCase() === 'yes');
     });
@@ -29,11 +27,14 @@ async function resetDatabase() {
 
   try {
     const dbName = process.env.DB_NAME || 'pulsechain_explorer';
+    
+    // connect to 'postgres' database for admin operations
+    const adminDb = new Database('postgres');
 
-    console.log(`\n🗑️  Dropping database "${dbName}"...`);
+    console.log(`\n🗑️  ${colors.aqua}Dropping database "${dbName}"...${colors.reset}\n`);
 
     // Terminate existing connections
-    await db.query(`
+    await adminDb.query(`
       SELECT pg_terminate_backend(pg_stat_activity.pid)
       FROM pg_stat_activity
       WHERE pg_stat_activity.datname = $1
@@ -41,13 +42,14 @@ async function resetDatabase() {
     `, [dbName]);
 
     // Drop database
-    await db.query(`DROP DATABASE IF EXISTS ${dbName}`);
+    await adminDb.query(`DROP DATABASE IF EXISTS ${dbName}`);
 
-    console.log(`✅ Database "${dbName}" dropped successfully!\n`);
-    await db.close();
+    console.log(rainbow(`✅ Database "${dbName}" dropped successfully!\n`));
+    await adminDb.close();
   } catch (error) {
     console.error('❌ Reset failed:', error.message);
     console.error(error);
+    await adminDb.close();
     process.exit(1);
   }
 }
