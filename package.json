@@ -4,7 +4,12 @@
   "description": "",
   "scripts": {
     "db:setup": "node scripts/setup-db.js",
-    "db:reset": "node scripts/reset-db.js"
+    "db:reset": "node scripts/reset-db.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest test/indexer",
+    "test:integration": "jest test/integration"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +20,9 @@
     "pg": "^8.16.3",
     "readline": "^1.3.0",
     "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0"
   }
 }
