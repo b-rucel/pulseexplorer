@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2025-10-28
+
+### Added
+
+#### Performance Optimizations
+- **BlockFetcher parallel processing** (`src/indexer/BlockFetcher.js`)
+  - Add parallelBatches configuration for concurrent batch processing (default: 5)
+  - Refactor syncHistoricalBlocks() to process multiple batches in parallel using Promise.allSettled
+  - Add fetchAndSaveBatchWithRetry() to encapsulate retry logic per batch
+  - Process batches in parallel chunks respecting parallelBatches concurrency limit
+  - Track failed batches separately with error details for reporting
+  - Add progress tracking for parallel chunk processing
+  - Log completed and failed batch counts in summary
+  - Display failed batch ranges in warning logs for debugging
+  - Update currentBlock pointer based on highest completed batch
+  - Improve retry logic isolation per batch instead of global retry counter
+  - Add detailed logging for parallel chunk progress and individual batch completion
+
+#### Testing Infrastructure
+- **BlockFetcher unit tests** (`test/indexer/BlockFetcher.test.js`)
+  - Add comprehensive unit tests for BlockFetcher with parallel processing coverage
+  - Test initialize() with existing blocks and from start block
+  - Test initialize() error handling for failed RPC connection
+  - Test fetchAndSaveBatch() successful block fetching and saving
+  - Test fetchAndSaveBatch() handling of empty block arrays and reorg checking
+  - Test fetchAndSaveBatchWithRetry() with retry logic and exponential backoff delays (2s, 4s, 8s)
+  - Test syncHistoricalBlocks() parallel batch processing with large block ranges
+  - Test syncHistoricalBlocks() handling partial batch failures and failed batches summary
+  - Test syncHistoricalBlocks() respecting isRunning flag for graceful stop
+  - Test checkForReorgs() detecting reorg and deleting blocks from reorg point
+  - Test stop() stopping fetcher and closing RPC connection
+  - Test getStats() combining RPC chain height with storage statistics
+  - Test sleep() utility function with fake timers
+  - Achieve comprehensive coverage of all BlockFetcher methods including parallel processing
+
+### Changed
+
+- **Environment configuration** (`.env.example`)
+  - Fix environment variable name from START_BLOCK to INDEXER_START_BLOCK
+  - Add INDEXER_BATCH_SIZE configuration (default: 50)
+  - Add INDEXER_PARALLEL_BATCHES for concurrent batch processing (default: 5)
+  - Add INDEXER_BLOCK_DELAY for delay between batch chunks (default: 0)
+  - Add INDEXER_ENABLE_REORG_CHECK to toggle reorg detection (default: true)
+
+- **BlockFetcher configuration** (`src/indexer/BlockFetcher.js`)
+  - Reduce default batchSize from 100 to 10 blocks for better granularity
+
+- **Indexer configuration** (`src/indexer/index.js`)
+  - Update default batchSize from 100 to 50 blocks for optimal performance
+
 ## [0.0.6] - 2025-10-28
 
 ### Added
@@ -260,6 +310,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.7]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.3...v0.0.4

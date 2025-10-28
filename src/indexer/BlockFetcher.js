@@ -8,9 +8,10 @@ const config = {
   },
   indexer: {
     startBlock: parseInt(process.env.INDEXER_START_BLOCK || '0'),
-    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '100'),
+    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '10'),
     blockDelay: parseInt(process.env.INDEXER_BLOCK_DELAY || '0'),
     enableReorgCheck: process.env.INDEXER_ENABLE_REORG_CHECK !== 'false',
+    parallelBatches: parseInt(process.env.INDEXER_PARALLEL_BATCHES || '5'),
   },
 }
 
@@ -112,61 +113,128 @@ class BlockFetcher {
   }
 
   /**
-   * Sync historical blocks in batches
+   * Sync historical blocks in batches with parallel processing
    * @param {number} fromBlock - Starting block number
    * @param {number} toBlock - Ending block number
    */
   async syncHistoricalBlocks(fromBlock, toBlock) {
     const batchSize = config.indexer.batchSize;
-    let currentBatch = fromBlock;
+    const parallelBatches = config.indexer.parallelBatches;
 
-    while (currentBatch <= toBlock && this.isRunning) {
-      const endBlock = Math.min(currentBatch + batchSize - 1, toBlock);
+    // Create array of all batch ranges to process
+    const batches = [];
+    for (let start = fromBlock; start <= toBlock; start += batchSize) {
+      const end = Math.min(start + batchSize - 1, toBlock);
+      batches.push({ from: start, to: end });
+    }
 
-      logger.info('Syncing batch', {
-        from: currentBatch,
-        to: endBlock,
-        progress: `${((currentBatch - fromBlock) / (toBlock - fromBlock) * 100).toFixed(2)}%`,
+    logger.info('Starting parallel sync', {
+      totalBatches: batches.length,
+      batchSize,
+      parallelBatches,
+      totalBlocks: toBlock - fromBlock + 1,
+    });
+
+    let processedBatches = 0;
+    let failedBatches = [];
+
+    // Process batches in parallel with concurrency control
+    for (let i = 0; i < batches.length && this.isRunning; i += parallelBatches) {
+      const chunk = batches.slice(i, i + parallelBatches);
+
+      logger.info('Processing parallel chunk', {
+        chunk: `${i + 1}-${Math.min(i + parallelBatches, batches.length)} of ${batches.length}`,
+        progress: `${((i / batches.length) * 100).toFixed(2)}%`,
       });
 
-      try {
-        await this.fetchAndSaveBatch(currentBatch, endBlock);
-        currentBatch = endBlock + 1;
-        this.currentBlock = endBlock;
-        this.retryCount = 0; // Reset retry count on success
+      // Process this chunk of batches in parallel
+      const results = await Promise.allSettled(
+        chunk.map(batch => this.fetchAndSaveBatchWithRetry(batch.from, batch.to))
+      );
 
-      } catch (error) {
-        logger.error('Failed to sync batch', {
-          from: currentBatch,
-          to: endBlock,
-          error: error.message,
-        });
-
-        // Retry with exponential backoff
-        if (this.retryCount < this.maxRetries) {
-          this.retryCount++;
-          const delay = Math.pow(2, this.retryCount) * 1000;
-          logger.info(`Retrying in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
-          await this.sleep(delay);
-        } else {
-          logger.error('Max retries reached, skipping batch', {
-            from: currentBatch,
-            to: endBlock,
+      // Track results
+      results.forEach((result, idx) => {
+        const batch = chunk[idx];
+        if (result.status === 'fulfilled') {
+          processedBatches++;
+          this.currentBlock = Math.max(this.currentBlock, batch.to);
+          logger.info('Batch completed', {
+            from: batch.from,
+            to: batch.to,
+            completed: processedBatches,
+            total: batches.length,
           });
-          currentBatch = endBlock + 1;
-          this.retryCount = 0;
+        } else {
+          failedBatches.push({ ...batch, error: result.reason.message });
+          logger.error('Batch failed after retries', {
+            from: batch.from,
+            to: batch.to,
+            error: result.reason.message,
+          });
         }
-      }
+      });
 
-      // Optional delay between batches to avoid overwhelming RPC
-      if (config.indexer.blockDelay > 0) {
+      // Optional delay between parallel chunks
+      if (config.indexer.blockDelay > 0 && i + parallelBatches < batches.length) {
         await this.sleep(config.indexer.blockDelay);
       }
     }
 
+    // Summary
     logger.info('Historical sync completed', {
       lastBlock: toBlock,
+      successfulBatches: processedBatches,
+      failedBatches: failedBatches.length,
     });
+
+    if (failedBatches.length > 0) {
+      logger.warn('Failed batches summary', {
+        count: failedBatches.length,
+        batches: failedBatches.map(b => `${b.from}-${b.to}`),
+      });
+    }
+  }
+
+  /**
+   * Fetch and save a batch with retry logic
+   * @param {number} fromBlock
+   * @param {number} toBlock
+   * @returns {Promise<void>}
+   */
+  async fetchAndSaveBatchWithRetry(fromBlock, toBlock) {
+    let retryCount = 0;
+    const maxRetries = this.maxRetries;
+
+    while (retryCount <= maxRetries) {
+      try {
+        await this.fetchAndSaveBatch(fromBlock, toBlock);
+        return; // Success
+      } catch (error) {
+        retryCount++;
+
+        if (retryCount > maxRetries) {
+          logger.error('Batch failed after all retries', {
+            from: fromBlock,
+            to: toBlock,
+            attempts: retryCount,
+            error: error.message,
+          });
+          throw error;
+        }
+
+        const delay = Math.pow(2, retryCount) * 1000;
+        logger.warn('Batch failed, retrying', {
+          from: fromBlock,
+          to: toBlock,
+          attempt: retryCount,
+          maxRetries,
+          retryIn: `${delay}ms`,
+          error: error.message,
+        });
+
+        await this.sleep(delay);
+      }
+    }
   }
 
   /**

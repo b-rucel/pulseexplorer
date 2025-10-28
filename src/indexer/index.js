@@ -27,7 +27,7 @@ const config = {
   },
   indexer: {
     startBlock: parseInt(process.env.INDEXER_START_BLOCK || '0'),
-    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '100'),
+    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '50'),
   },
 };
 
