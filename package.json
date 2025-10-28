@@ -5,6 +5,7 @@
   "scripts": {
     "db:setup": "node scripts/setup-db.js",
     "db:reset": "node scripts/reset-db.js",
+    "indexer": "node src/indexer/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
