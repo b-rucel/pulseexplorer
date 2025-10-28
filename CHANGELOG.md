@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2025-10-28
+
+### Added
+
+#### Indexer Orchestration
+- **BlockFetcher** (`src/indexer/BlockFetcher.js`)
+  - Implement BlockFetcher class to coordinate indexing strategy between RpcClient and BlockStorage
+  - Add environment-based configuration for RPC retries, start block, batch size, block delay, and reorg checking
+  - Add initialize() to connect RPC, get chain height, and determine starting block from database
+  - Add start() to orchestrate historical backfill and real-time sync workflows
+  - Add syncHistoricalBlocks() for batch processing with progress tracking and exponential backoff retry
+  - Add fetchAndSaveBatch() to coordinate block fetching from RPC and saving to database
+  - Add checkForReorgs() to detect blockchain reorganizations by comparing block hashes
+  - Handle reorg detection with automatic block deletion and re-indexing from reorg point
+  - Add startRealTimeSync() for continuous polling of new blocks (12s interval matching PulseChain block time)
+  - Add stop() for graceful shutdown with RPC connection cleanup
+  - Add getStats() to provide indexing progress metrics (chain height, indexed blocks, behind count, percentage)
+  - Implement retry logic with exponential backoff for failed batch operations
+  - Add configurable delay between batches to avoid overwhelming RPC endpoints
+  - Track running state and current block position
+  - Export singleton instance for application-wide use
+
+#### Main Indexer Entry Point
+- **Indexer main** (`src/indexer/index.js`)
+  - Implement main entry point for PulseChain blockchain indexer
+  - Add environment-based configuration for database, RPC, and indexer settings
+  - Add main() function to initialize and start the indexer workflow
+  - Check database connection health before starting indexer
+  - Initialize BlockFetcher and display initial indexing state (chain height, indexed blocks, progress)
+  - Add graceful shutdown handler for SIGINT and SIGTERM signals
+  - Display final indexing statistics on shutdown
+  - Close database and RPC connections properly during shutdown
+  - Add uncaughtException and unhandledRejection handlers for error recovery
+  - Prevent duplicate shutdown attempts with isShuttingDown flag
+  - Include comprehensive logging throughout initialization and shutdown
+  - Display configuration on startup (database, RPC URL, start block, batch size, environment)
+  - Add shebang for direct execution
+  - Integrate dotenv for environment variable loading
+
+### Scripts
+- Added `indexer` - Run blockchain indexer (node src/indexer/index.js)
+
 ## [0.0.5] - 2025-10-27
 
 ### Added
@@ -218,6 +260,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.6]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.2...v0.0.3
