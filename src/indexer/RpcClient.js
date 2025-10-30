@@ -1,12 +1,6 @@
 const { ethers } = require('ethers')
 const logger = require('../../lib/logger');
-
-const config = {
-  http: process.env.RPC_URL || 'https://rpc.pulsechain.com',
-  ws: process.env.RPC_WS_URL || 'wss://rpc.pulsechain.com',
-  timeout: parseInt(process.env.RPC_TIMEOUT || '30000'),
-  retries: parseInt(process.env.RPC_RETRIES || '3'),
-};
+const config = require('../../lib/config');
 
 class RpcClient {
   constructor() {
@@ -21,12 +15,12 @@ class RpcClient {
   async connect() {
     try {
       logger.info('Connecting to RPC', {
-        httpUrl: config.http,
-        wsUrl: config.ws,
+        httpUrl: config.rpc.http,
+        wsUrl: config.rpc.ws,
       });
 
       // initialize http provider
-      this.httpProvider = new ethers.JsonRpcProvider(config.http, {
+      this.httpProvider = new ethers.JsonRpcProvider(config.rpc.http, {
         name: 'pulsechain',
         chainId: 369,
       });
@@ -38,9 +32,9 @@ class RpcClient {
       });
 
       // initialize websocket provider if configured
-      if (config.ws) {
+      if (config.rpc.ws) {
         try {
-          this.wsProvider = new ethers.WebSocketProvider(config.ws, {
+          this.wsProvider = new ethers.WebSocketProvider(config.rpc.ws, {
             name: 'pulsechain',
             chainId: 369,
           });
@@ -97,7 +91,7 @@ class RpcClient {
    * @returns {Promise<object|null>}
    */
   async getBlock(blockNumber, includeTransactions = true) {
-    const maxRetries = config.retries;
+    const maxRetries = config.rpc.retries;
     let lastError = null;
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {

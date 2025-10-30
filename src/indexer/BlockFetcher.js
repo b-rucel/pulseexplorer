@@ -1,19 +1,7 @@
 const rpcClient = require('./RpcClient');
 const blockStorage = require('./BlockStorage');
 const logger = require('../../lib/logger');
-
-const config = {
-  rpc: {
-    retries: parseInt(process.env.RPC_RETRIES || '3'),
-  },
-  indexer: {
-    startBlock: parseInt(process.env.INDEXER_START_BLOCK || '0'),
-    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '10'),
-    blockDelay: parseInt(process.env.INDEXER_BLOCK_DELAY || '0'),
-    enableReorgCheck: process.env.INDEXER_ENABLE_REORG_CHECK !== 'false',
-    parallelBatches: parseInt(process.env.INDEXER_PARALLEL_BATCHES || '5'),
-  },
-}
+const config = require('../../lib/config');
 
 /**
  * BlockFetcher - Coordinates blockchain indexing strategy

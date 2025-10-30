@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2025-10-30
+
+### Added
+
+#### Centralized Configuration
+- **Configuration module** (`lib/config.js`)
+  - Implement Config class as centralized configuration module
+  - Load all environment variables with sensible defaults
+  - Add database configuration (host, port, database, user, password, pool settings)
+  - Add RPC configuration (HTTP, WebSocket URLs, timeout, retries)
+  - Add indexer configuration (startBlock, batchSize, parallelBatches, blockDelay, enableReorgCheck)
+  - Add API configuration for future REST API (port, host, CORS origin)
+  - Add Redis configuration for future caching support (URL, TTL settings)
+  - Add logging configuration (log level)
+  - Add environment detection (isDevelopment, isProduction, isTest)
+  - Implement validate() method to check required fields and value ranges
+  - Validate DB_PASSWORD is required in non-test environments
+  - Validate port numbers are within valid range (1-65535)
+  - Validate RPC URL formats (http/https and ws/wss protocols)
+  - Validate positive integers for batch size, parallel batches, and retries
+  - Add getAll() method to return complete configuration object
+  - Add print() method with sensitive data masking (passwords masked as ***)
+  - Add getDisplayConfig() method for safe logging output
+  - Export singleton instance for application-wide use
+
+#### Documentation
+- **README** (`README.md`)
+  - Add comprehensive project documentation with quick start guide
+  - Add features section highlighting parallel processing, retry logic, reorg detection
+  - List core components (RpcClient, BlockFetcher, BlockStorage, Database layer)
+  - Add prerequisites and installation instructions
+  - Add Docker PostgreSQL setup instructions with container management commands
+  - Add database setup instructions for both initial setup and reset
+  - Add running the indexer section with example output
+  - Add testing section with all npm test commands and coverage stats
+  - Add performance metrics section (250 blocks/second, 5x faster than sequential)
+  - Add performance tuning tips for configuration
+  - Add database schema overview table with 8 core tables
+  - Add project structure section showing directory layout
+  - Add roadmap section with upcoming features
+
+### Changed
+
+#### Configuration Refactoring
+- **RpcClient** (`src/indexer/RpcClient.js`)
+  - Replace inline config object with centralized config module import
+  - Update all config references to use config.rpc namespace
+
+- **BlockFetcher** (`src/indexer/BlockFetcher.js`)
+  - Replace inline config object with centralized config module import
+  - Update all config references to use config.rpc and config.indexer namespaces
+
+- **Indexer entry point** (`src/indexer/index.js`)
+  - Replace inline config object with centralized config module import
+  - Use config.getDisplayConfig() for safe logging output
+
+- **Logger** (`lib/logger.js`)
+  - Replace process.env.LOG_LEVEL with config.logging.level
+
+- **Database class** (`lib/db.js`)
+  - Replace inline config object with centralized config module import
+  - Update all config references to use config.db namespace
+  - Replace environment detection with config.env flags
+
+- **Database scripts** (`scripts/setup-db.js`, `scripts/reset-db.js`)
+  - Replace process.env.DB_NAME with config.db.database
+
+### Fixed
+
+- **BlockFetcher tests** (`test/indexer/BlockFetcher.test.js`)
+  - Fix flaky tests for parallel processing
+  - Change failed batch check from exact count to greaterThanOrEqual for reliability
+  - Fix 'should respect isRunning flag' test to use mockImplementationOnce
+  - Make tests more resilient to batch size configuration changes
+
 ## [0.0.7] - 2025-10-28
 
 ### Added
@@ -310,6 +385,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.8]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/b-rucel/pulseexplorer/compare/v0.0.4...v0.0.5

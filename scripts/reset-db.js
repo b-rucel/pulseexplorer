@@ -2,6 +2,7 @@ require('dotenv').config();
 const readline = require('readline');
 const { colors, rainbow, colorize } = require('../lib/colors');
 const { Database } = require('../lib/db');
+const config = require('../lib/config');
 
 
 async function resetDatabase() {
@@ -26,7 +27,7 @@ async function resetDatabase() {
   }
 
   try {
-    const dbName = process.env.DB_NAME || 'pulsechain_explorer';
+    const dbName = config.db.database;
     
     // connect to 'postgres' database for admin operations
     const adminDb = new Database('postgres');
