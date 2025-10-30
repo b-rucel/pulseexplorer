@@ -3,6 +3,7 @@ const { colors, rainbow, colorize } = require('../lib/colors');
 const fs = require('fs');
 const path = require('path');
 const { Database } = require('../lib/db');
+const config = require('../lib/config');
 
 
 async function setupDatabase() {
@@ -10,7 +11,7 @@ async function setupDatabase() {
   console.log(colorize('                Postgres - Database Setup                  '));
   console.log(rainbow('═══════════════════════════════════════════════════════════\n'));
 
-  const dbName = process.env.DB_NAME || 'pulsechain_explorer';
+  const dbName = config.db.database;
 
   // Connect to 'postgres' database for admin operations
   const adminDb = new Database('postgres');
