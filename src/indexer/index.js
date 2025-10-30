@@ -14,22 +14,7 @@ require('dotenv').config()
 const blockFetcher = require('./BlockFetcher');
 const db = require('../../lib/db');
 const logger = require('../../lib/logger');
-
-const config = {
-  env: process.env.NODE_ENV || 'development',
-  db: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'pulsechain_explorer',
-  },
-  rpc: {
-    http: process.env.RPC_URL || 'https://pulsechain-rpc.publicnode.com',
-  },
-  indexer: {
-    startBlock: parseInt(process.env.INDEXER_START_BLOCK || '0'),
-    batchSize: parseInt(process.env.INDEXER_BATCH_SIZE || '50'),
-  },
-};
+const config = require('../../lib/config');
 
 // Track if shutdown is in progress
 let isShuttingDown = false;
@@ -44,13 +29,7 @@ async function main() {
     logger.info('='.repeat(60));
 
     // Display configuration
-    logger.info('Configuration loaded:', {
-      database: `${config.db.host}:${config.db.port}/${config.db.database}`,
-      rpcUrl: config.rpc.http,
-      startBlock: config.indexer.startBlock,
-      batchSize: config.indexer.batchSize,
-      environment: config.env,
-    });
+    logger.info('Configuration loaded:', config.getDisplayConfig());
 
     // Check database connection
     logger.info('Checking database connection...');
